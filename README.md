@@ -1,6 +1,6 @@
-# 基于 RDK X5 的垃圾分类机器人与 YOLO 百帧级视觉追踪优化
+# RDK X5-Based Waste Sorting Robot with 100+ FPS YOLO Vision Tracking Optimization
 
-> 高算力上位机视觉决策 + 高实时下位机运动执行 —— 面向家庭与社区场景的全自动智能垃圾分类机器人
+> High-Performance Host-Side Vision Decision-Making + High-Real-Time MCU-Side Motion Execution — A Fully Autonomous Intelligent Waste Sorting Robot for Home and Community Scenarios
 
 [![Platform](https://img.shields.io/badge/Platform-RDK%20X5-blue)]()
 [![MCU](https://img.shields.io/badge/MCU-STM32H750-green)]()
@@ -11,245 +11,247 @@
 
 ---
 
-## 目录
+## Table of Contents
 
-- [项目简介](#项目简介)
-- [核心特性](#核心特性)
-- [系统架构](#系统架构)
-- [硬件组成](#硬件组成)
-- [软件模块](#软件模块)
-- [性能指标](#性能指标)
-- [主要创新点](#主要创新点)
-- [机械设计](#机械设计)
-- [通信协议](#通信协议)
-- [应用场景](#应用场景)
-- [可扩展方向](#可扩展方向)
-- [项目结构建议](#项目结构建议)
-- [参考文献](#参考文献)
-- [致谢](#致谢)
-
----
-
-## 项目简介
-
-随着我国生活垃圾产生量持续增长以及"双碳"战略的深入推进，城市生活垃圾的智能化、自动化分类已成为建设资源节约型、环境友好型社会的关键一环。然而，目前主流的垃圾分类装置普遍存在**识别速度慢、追踪鲁棒性弱、对袋装垃圾束手无策、机电协同精度差**等突出问题，难以满足真实家庭与社区场景的实际使用需求。
-
-本项目构建了一款基于 **RDK X5** 与 **STM32H750** 异构双核架构的智能垃圾分类机器人，整体方案采用"高算力上位机视觉决策 + 高实时下位机运动执行"的分层架构，实现从"**图像采集 → 智能识别 → 多目标追踪 → 路径规划 → 精准抓取 → 破袋分拣 → 定向投放**"的完整作业闭环，可全过程无人干预地完成生活垃圾的智能化分类作业。
-
-**实测表明**：整机视觉识别帧率达 **90 FPS 以上**，分类准确率 **95% 以上**，可稳定完成可回收物、有害垃圾、厨余垃圾、其他垃圾四大类的智能分拣作业。
+- [Project Overview](#project-overview)
+- [Core Features](#core-features)
+- [System Architecture](#system-architecture)
+- [Hardware Components](#hardware-components)
+- [Software Modules](#software-modules)
+- [Performance Metrics](#performance-metrics)
+- [Key Innovations](#key-innovations)
+- [Mechanical Design](#mechanical-design)
+- [Communication Protocol](#communication-protocol)
+- [Application Scenarios](#application-scenarios)
+- [Extensibility](#extensibility)
+- [Suggested Project Structure](#suggested-project-structure)
+- [References](#references)
+- [Acknowledgments](#acknowledgments)
 
 ---
 
-## 核心特性
+## Project Overview
 
-| 特性 | 说明 |
+With the continuous growth of municipal solid waste generation and the deepening implementation of China's "dual carbon" strategy, intelligent and automated sorting of household waste has become a key component in building a resource-conserving, environmentally friendly society. However, most mainstream waste sorting devices on the market today suffer from prominent problems such as **slow recognition speed, weak tracking robustness, inability to handle bagged waste, and poor electromechanical coordination precision**, making it difficult to meet the practical needs of real home and community scenarios.
+
+This project builds an intelligent waste sorting robot based on a heterogeneous dual-core architecture combining **RDK X5** and **STM32H750**. The overall design adopts a layered architecture of "high-performance host-side vision decision-making + high-real-time MCU-side motion execution," achieving a complete closed-loop workflow from "**image acquisition → intelligent recognition → multi-target tracking → path planning → precise grasping → bag-breaking and sorting → directional disposal**." The entire process can autonomously complete intelligent household waste sorting without human intervention.
+
+**Test results show**: the system achieves a visual recognition frame rate of over **90 FPS**, with a classification accuracy above **95%**, and can reliably sort waste into four major categories — recyclables, hazardous waste, kitchen waste, and other waste.
+
+---
+
+## Core Features
+
+| Feature | Description |
 |------|------|
-| 🎯 **多类别垃圾智能识别与追踪** | 基于 YOLOv11 实时识别四大类垃圾，结合 ByteTrack 为每个目标分配稳定 ID，解决遮挡、堆叠场景下的 ID 切换问题 |
-| 🦾 **高精度机械抓取与定向投放** | CoreXY 运动学解算驱动双步进电机 + 大扭力数字舵机，实现 XY 平面精准夹取与分类投放 |
-| 🔥 **袋装垃圾自动破袋处理** | 创新引入电热丝热熔破袋方案，构建"识别 → 破袋 → 再识别 → 分拣"闭环链路，突破传统装置仅能处理裸装垃圾的局限 |
-| 🖥️ **实时人机交互与状态可视化** | 串口屏实时显示运行状态、分类计数、桶内余量及故障告警 |
-| ⚡ **嵌入式端百帧级推理** | CPU 多线程并行前后处理 + BPU 异步推理流水线，结合 DFL 节点 int16 量化，实现 90+ FPS |
+| 🎯 **Multi-Category Waste Recognition & Tracking** | Real-time recognition of four waste categories based on YOLOv11, combined with ByteTrack to assign stable IDs to each target, resolving ID-switching issues in occlusion and stacking scenarios |
+| 🦾 **High-Precision Mechanical Grasping & Directional Disposal** | CoreXY kinematics driving dual stepper motors + high-torque digital servos for precise XY-plane grasping and category-based disposal |
+| 🔥 **Automatic Bag-Breaking for Bagged Waste** | An innovative heating-wire thermal-fusion bag-breaking solution builds a "recognize → break bag → re-recognize → sort" closed loop, overcoming the limitation of traditional devices that can only handle unbagged waste |
+| 🖥️ **Real-Time Human-Machine Interaction & Status Visualization** | A serial-port HMI screen displays operating status, sorting counts, bin capacity, and fault alerts in real time |
+| ⚡ **100+ FPS Embedded Inference** | CPU multi-threaded parallel pre/post-processing combined with a BPU asynchronous inference pipeline, along with int16 quantization of DFL nodes, achieves 90+ FPS |
 
 ---
 
-## 系统架构
+## System Architecture
 
-系统由 **视觉感知层、决策推理层、通信交互层、运动执行层、人机交互层** 五大子模块组成，各模块通过严格定义的串口通信协议高效协同，构成"感知—决策—通信—执行—反馈"的完整闭环。
+The system consists of five subsystems: **Visual Perception Layer, Decision & Inference Layer, Communication Layer, Motion Execution Layer, and Human-Machine Interaction Layer**. These modules collaborate efficiently through a strictly defined serial communication protocol, forming a complete closed loop of "perception—decision—communication—execution—feedback."
 
 ```
 ┌─────────────────────────────┐         UART          ┌──────────────────────────────┐
-│   上位机 (RDK X5 / Ubuntu)    │  ◄──────────────────►  │   下位机 (STM32H750 / Keil)   │
-│                              │   自定义通信协议         │                              │
+│  Host (RDK X5 / Ubuntu)      │  ◄──────────────────►  │  MCU (STM32H750 / Keil)       │
+│                              │  Custom Protocol        │                              │
 │  ┌────────┐  ┌────────────┐  │                        │  ┌────────────┐ ┌──────────┐ │
-│  │图像采集 │ →│  前处理     │  │                        │  │ 串口接收/解析│ │运动控制   │ │
+│  │ Image   │ →│ Preprocess │  │                        │  │ UART Recv/  │ │ Motion    │ │
+│  │ Capture │  │            │  │                        │  │ Parse       │ │ Control   │ │
 │  └────────┘  └────────────┘  │                        │  └────────────┘ └──────────┘ │
 │        ↓                     │                        │        ↓             ↓       │
 │  ┌────────────┐ ┌──────────┐ │                        │  ┌────────────┐ ┌──────────┐ │
-│  │ BPU 推理    │ →│后处理追踪│ │   感知/决策信息 →       │  │CoreXY运动学 │ │舵机/破袋  │ │
-│  │ (YOLOv11)   │  │(ByteTrack)│ │                       │  │  解算       │ │时序控制   │ │
-│  └────────────┘ └──────────┘ │   ← 状态/传感数据        │  └────────────┘ └──────────┘ │
+│  │ BPU         │ →│Postproc/│ │  Perception/Decision → │  │ CoreXY      │ │ Servo/    │ │
+│  │ Inference   │  │Tracking │ │  Data                  │  │ Kinematics  │ │ Bag-Break │ │
+│  │ (YOLOv11)   │  │(ByteTrack)│ │  ← Status/Sensor Data  │  │ Solver      │ │ Timing    │ │
+│  └────────────┘ └──────────┘ │                        │  └────────────┘ └──────────┘ │
 │        ↓                     │                        │        ↓                     │
 │  ┌────────────────────────┐  │                        │  ┌──────────────────────────┐ │
-│  │  串口通信线程            │  │                        │  │  人机交互显示 (串口屏)      │ │
+│  │  Serial Comm Thread     │  │                        │  │  HMI Display (Serial LCD) │ │
 │  └────────────────────────┘  │                        │  └──────────────────────────┘ │
 └─────────────────────────────┘                        └──────────────────────────────┘
-        前台多线程并行架构                                       前后台调度模式
-   （仅保留最新帧缓冲机制）                              （主循环 + 中断服务）
+      Foreground Multi-Threaded Architecture                    Foreground/Background Scheduling
+    (Latest-frame-only buffering)                          (Main loop + Interrupt service)
 ```
 
-- **视觉感知层**：USB 1080P 高清摄像头，采集载物平台垃圾图像
-- **决策推理层**：RDK X5 单板计算机，承担图像预处理、YOLOv11 推理、ByteTrack 追踪、坐标变换与指令生成
-- **通信交互层**：基于 UART 串口协议，实现上位机指令向下位机的可靠下发
-- **运动执行层**：STM32H750 驱动 CoreXY 步进电机系统、机械夹爪舵机、分类盘舵机及电热丝破袋机构
-- **人机交互层**：串口屏实时显示运行状态，集成红外感应开关实现非接触式触发
+- **Visual Perception Layer**: A USB 1080P HD camera captures images of waste on the loading platform
+- **Decision & Inference Layer**: The RDK X5 single-board computer handles image preprocessing, YOLOv11 inference, ByteTrack tracking, coordinate transformation, and command generation
+- **Communication Layer**: Based on the UART serial protocol, reliably delivers commands from the host to the MCU
+- **Motion Execution Layer**: The STM32H750 drives the CoreXY stepper motor system, the mechanical gripper servo, the sorting-tray servo, and the heating-wire bag-breaking mechanism
+- **Human-Machine Interaction Layer**: A serial-port HMI screen displays real-time operating status, integrated with an infrared sensing switch for contactless triggering
 
 ---
 
-## 硬件组成
+## Hardware Components
 
-| 模块类别 | 核心元件 / 型号 | 主要功能 |
+| Module Category | Core Components / Model | Main Function |
 |---------|----------------|---------|
-| 上位机 | RDK X5（ARM Cortex-A55 × 8 @1.5 GHz，10 TOPS BPU，8 GB LPDDR4） | 图像采集、YOLOv11 推理、ByteTrack 追踪、坐标解算与指令生成 |
-| 下位机 | STM32H750VBT6（ARM Cortex-M7 @480 MHz） | 运动学解算、电机舵机驱动、传感器采集与人机交互调度 |
-| 视觉感知 | USB 1080P 高清摄像头 | 实时采集垃圾图像，宽视场、高清晰度 |
-| 运动执行 | 42 步进电机 + 同步带轮组 | XY 平面高精度协同运动（CoreXY） |
-| 动作执行 | 多组大扭力数字舵机 | 机械夹爪开合、分类盘旋转、垃圾投放 |
-| 位置基准 | 机械式限位开关 | XY 轴原点检测与回零 |
-| 传感监测 | 红外测距传感器 + 红外感应开关 | 桶内满载检测、非接触触发 |
-| 人机交互 | 串口屏 HMI 显示模块 | 实时显示运行状态、分类计数、故障告警 |
-| 破袋执行 | 继电器 + 电热丝模块 | 袋装垃圾热熔破袋 |
-| 电源管理 | 24V 锂电池 + 稳压模块 | 为各级器件提供稳定供电 |
+| Host | RDK X5 (ARM Cortex-A55 × 8 @1.5 GHz, 10 TOPS BPU, 8 GB LPDDR4) | Image acquisition, YOLOv11 inference, ByteTrack tracking, coordinate computation, and command generation |
+| MCU | STM32H750VBT6 (ARM Cortex-M7 @480 MHz) | Kinematics solving, motor/servo driving, sensor acquisition, and HMI scheduling |
+| Vision | USB 1080P HD camera | Real-time waste image capture, wide field of view, high resolution |
+| Motion | 42 stepper motors + timing pulley/belt set | High-precision coordinated XY-plane motion (CoreXY) |
+| Actuation | Multiple high-torque digital servos | Gripper open/close, sorting-tray rotation, waste disposal |
+| Positioning Reference | Mechanical limit switches | XY-axis origin detection and homing |
+| Sensing | Infrared distance sensor + infrared sensing switch | Bin-full detection, contactless triggering |
+| HMI | Serial-port HMI display module | Real-time display of operating status, sorting counts, and fault alerts |
+| Bag-Breaking | Relay + heating-wire module | Thermal-fusion bag-breaking for bagged waste |
+| Power Management | 24V lithium battery + voltage regulation module | Provides stable power to all components |
 
-### 电路模块
+### Circuit Modules
 
-电路系统划分为七大模块：**主控电路 / 电源电路 / 电机驱动电路 / 舵机驱动电路 / 传感采集电路 / 破袋继电电路 / 人机交互电路**，所有电路均经过严格的电磁兼容性设计与抗干扰处理。
-
----
-
-## 软件模块
-
-### 上位机（RDK X5 / Ubuntu 22.04）
-
-多线程并行架构，各功能线程相互独立，借助环形缓冲（仅保留最新帧）机制实现 CPU 与 BPU 的高效流水线并行处理：
-
-1. **图像采集与预处理模块** — USB 摄像头取流，执行格式转换、letterbox/resize、NV12 封装
-2. **YOLOv11 推理模块** — 加载 BPU 量化模型，异步任务提交，反量化 → DFL 解码 → NMS
-3. **ByteTrack 多目标追踪模块** — 卡尔曼滤波预测 + 匈牙利算法一次/二次关联，缓解遮挡导致的 ID 切换
-4. **坐标变换与指令下发模块** — 像素坐标 → 机械坐标，封装自定义协议帧后经 UART 下发
-
-### 下位机（STM32H750 / Keil + HAL）
-
-前后台调度模式——主循环（轮询执行）承担运动控制与传感采集；中断服务程序（USART 接收中断、定时器、限位开关）优先处理关键事件：
-
-5. **串口接收与解析模块** — USART 中断 + DMA 双缓冲接收，帧头/长度域/CRC 校验
-6. **CoreXY 运动学解算模块** — `ΔA = ΔX + ΔY`，`ΔB = ΔX − ΔY`，配合 ARR 动态调整实现速度梯形规划
-7. **舵机与执行机构控制模块** — 高级定时器输出 PWM，控制夹爪 / 分类盘 / Z 轴升降
-8. **破袋时序控制模块** — 抓取 → 继电器通断电 → 定时熔断，内置过热保护与超时退出
-9. **人机交互显示模块** — 独立 USART 与串口屏双向通信，支持模式切换与故障复位
+The circuit system is divided into seven modules: **main control circuit / power circuit / motor drive circuit / servo drive circuit / sensor acquisition circuit / bag-breaking relay circuit / HMI circuit**, all of which undergo rigorous electromagnetic compatibility design and anti-interference processing.
 
 ---
 
-## 性能指标
+## Software Modules
 
-| 测试项目 | 设计指标 | 实测结果 | 达标情况 |
+### Host (RDK X5 / Ubuntu 22.04)
+
+A multi-threaded parallel architecture where each functional thread operates independently, using a ring-buffer (latest-frame-only) mechanism to achieve efficient CPU-BPU pipelined parallel processing:
+
+1. **Image Acquisition & Preprocessing Module** — Captures frames from the USB camera; performs format conversion, letterbox/resize, and NV12 packaging
+2. **YOLOv11 Inference Module** — Loads the BPU-quantized model, submits asynchronous tasks, and performs dequantization → DFL decoding → NMS
+3. **ByteTrack Multi-Target Tracking Module** — Kalman filter prediction plus primary/secondary Hungarian-algorithm association, mitigating ID switching caused by occlusion
+4. **Coordinate Transformation & Command Dispatch Module** — Converts pixel coordinates to mechanical coordinates, packages custom protocol frames, and sends them via UART
+
+### MCU (STM32H750 / Keil + HAL)
+
+A foreground/background scheduling model — the main loop (polling execution) handles motion control and sensor acquisition, while interrupt service routines (USART receive interrupt, timers, limit switches) prioritize handling critical events:
+
+5. **Serial Receive & Parsing Module** — USART interrupt + DMA double-buffered reception, with frame-header/length-field/CRC validation
+6. **CoreXY Kinematics Solving Module** — `ΔA = ΔX + ΔY`, `ΔB = ΔX − ΔY`, combined with dynamic ARR adjustment to implement trapezoidal speed planning
+7. **Servo & Actuator Control Module** — Advanced timers output PWM to control the gripper / sorting tray / Z-axis lift
+8. **Bag-Breaking Timing Control Module** — Grasp → relay power on/off → timed fusion, with built-in overheat protection and timeout exit
+9. **HMI Display Module** — Independent USART for bidirectional communication with the serial HMI screen, supporting mode switching and fault reset
+
+---
+
+## Performance Metrics
+
+| Test Item | Design Target | Measured Result | Status |
 |---------|---------|---------|---------|
-| 四大类识别准确率 | ≥ 95% | 96.3% | ✅ 达标 |
-| 多目标 ID 切换率 | ≤ 5% | 3.2% | ✅ 优于设计 |
-| XY 平面定位误差 | ≤ ±1 mm | ±0.6 mm | ✅ 优于设计 |
-| 机械抓取成功率 | ≥ 95% | 97.5% | ✅ 达标 |
-| 单件分拣周期 | ≤ 5 s/件 | 约 4.2 s/件 | ✅ 达标 |
-| 破袋成功率 | ≥ 98% | 99.0% | ✅ 优于设计 |
-| 整机连续作业稳定性 | ≥ 2 h 无故障 | 连续 4 h 无故障 | ✅ 优于设计 |
+| Four-category recognition accuracy | ≥ 95% | 96.3% | ✅ Met |
+| Multi-target ID switch rate | ≤ 5% | 3.2% | ✅ Exceeded target |
+| XY-plane positioning error | ≤ ±1 mm | ±0.6 mm | ✅ Exceeded target |
+| Mechanical grasping success rate | ≥ 95% | 97.5% | ✅ Met |
+| Single-item sorting cycle | ≤ 5 s/item | ~4.2 s/item | ✅ Met |
+| Bag-breaking success rate | ≥ 98% | 99.0% | ✅ Exceeded target |
+| Continuous operation stability | ≥ 2 h fault-free | 4 h continuous, fault-free | ✅ Exceeded target |
 
-**其他关键指标**：
-- 视觉识别帧率：≥ 90 FPS（CPU-BPU 异步流水线 + int16 量化）
-- 整机功耗：待机 ≤ 15 W，作业 ≤ 60 W
-
----
-
-## 主要创新点
-
-1. **CPU-BPU 异步流水线调度机制**：CPU 多线程前后处理与 BPU 异步推理协同，使 YOLOv11 在嵌入式端突破 90 FPS
-2. **DFL 节点 int16 量化部署**：针对 Softmax 计算瓶颈定制化量化，精度基本无损前提下大幅释放 BPU 算力
-3. **YOLO + ByteTrack 多目标稳定追踪**：卡尔曼滤波与二次关联机制解决多目标遮挡、漏检导致的 ID 跳变难题
-4. **电热丝热熔破袋创新机构**：首创"识别 → 破袋 → 再识别 → 分拣"闭环链路，突破传统装置仅能处理裸装垃圾的局限
-5. **模块化卡扣式可拆装结构**：卡扣快拆配合磁吸透明舱门，无需工具即可完成拆装清洁
+**Other key metrics**:
+- Visual recognition frame rate: ≥ 90 FPS (CPU-BPU asynchronous pipeline + int16 quantization)
+- Overall power consumption: standby ≤ 15 W, operating ≤ 60 W
 
 ---
 
-## 机械设计
+## Key Innovations
 
-机械结构以"模块化、轻量化、易维护"为核心理念，在 SolidWorks 中完成三维建模与运动学仿真，采用 **CNC 加工铝合金型材 + 3D 打印件 + 亚克力板材** 联合制造。整机划分为六大部分：
-
-- **整体机架**：CNC 加工 4040 工业铝合金型材，刚性强、平面度高
-- **CoreXY 二维移动平台**：双 42 步进电机 + GT2 同步带，运动惯量小、定位精度高
-- **机械夹爪与升降机构**：大扭力数字舵机驱动，仿生柔性化夹爪头适配多形态垃圾
-- **分类垃圾桶**：四类卡扣式快拆桶体，磁吸透明舱门便于观察余量
-- **破袋执行机构**：电热丝模块 + 固定支架 + 防护罩，安全熔断袋装垃圾
-- **外壳防护结构**：亚克力板与 3D 打印件组合包覆，兼顾保护性与可视化展示
+1. **CPU-BPU Asynchronous Pipeline Scheduling Mechanism**: CPU multi-threaded pre/post-processing works in tandem with BPU asynchronous inference, enabling YOLOv11 to exceed 90 FPS on embedded hardware
+2. **int16 Quantization Deployment of DFL Nodes**: Custom quantization targeting the Softmax computation bottleneck significantly frees up BPU compute with virtually no accuracy loss
+3. **YOLO + ByteTrack Stable Multi-Target Tracking**: Kalman filtering combined with secondary association resolves ID jumps caused by occlusion and missed detections among multiple targets
+4. **Innovative Heating-Wire Thermal-Fusion Bag-Breaking Mechanism**: Pioneers a "recognize → break bag → re-recognize → sort" closed loop, overcoming the limitation of traditional devices that can only handle unbagged waste
+5. **Modular Snap-Fit Disassembly Structure**: Quick-release snap fittings combined with magnetic transparent access doors allow tool-free disassembly and cleaning
 
 ---
 
-## 通信协议
+## Mechanical Design
 
-### 上位机 → 下位机（目标坐标帧）
+The mechanical structure is centered on "modularity, lightweight design, and ease of maintenance." 3D modeling and kinematic simulation were completed in SolidWorks, and the robot was fabricated using a combination of **CNC-machined aluminum alloy profiles, 3D-printed parts, and acrylic sheets**. The overall structure is divided into six main sections:
 
-| 字段 | 说明 |
+- **Overall Frame**: CNC-machined 4040 industrial aluminum alloy profiles, offering high rigidity and flatness
+- **CoreXY 2D Motion Platform**: Dual 42 stepper motors + GT2 timing belts, providing low motion inertia and high positioning precision
+- **Mechanical Gripper & Lift Mechanism**: Driven by high-torque digital servos, with a bio-inspired flexible gripper head adaptable to various waste shapes
+- **Sorting Bins**: Four quick-release snap-fit bins with magnetic transparent doors for easy capacity monitoring
+- **Bag-Breaking Mechanism**: Heating-wire module + mounting bracket + protective cover, safely fusing through bagged waste
+- **Enclosure & Protection Structure**: A combination of acrylic panels and 3D-printed parts providing both protection and visual display
+
+---
+
+## Communication Protocol
+
+### Host → MCU (Target Coordinate Frame)
+
+| Field | Description |
 |------|------|
-| 帧头 | 帧起始标识 |
-| 目标 ID | ByteTrack 分配的稳定追踪 ID |
-| 坐标 X / 坐标 Y | 机械坐标系下脉冲坐标 |
-| 垃圾类别 | 四大类垃圾分类标签 |
-| CRC 校验 | 帧完整性校验 |
+| Frame Header | Frame start marker |
+| Target ID | Stable tracking ID assigned by ByteTrack |
+| Coordinate X / Coordinate Y | Pulse coordinates in the mechanical coordinate system |
+| Waste Category | One of the four waste classification labels |
+| CRC Checksum | Frame integrity check |
 
-无目标时发送空目标/停止类状态帧，避免下位机沿用上一目标。
+When no target is detected, an empty-target/stop status frame is sent to prevent the MCU from continuing to act on the previous target.
 
-### 下位机 → 上位机（状态反馈帧）
+### MCU → Host (Status Feedback Frame)
 
-包含位置、速度、传感数据、告警等状态信息，经 USART 中断 + DMA 双缓冲接收，空闲中断触发解析。
-
----
-
-## 应用场景
-
-**当前场景**：家庭、社区、商超、写字楼、机场、车站等公共与半公共空间的生活垃圾智能分类。
-
-**可迁移场景**（得益于"高算力嵌入式视觉 + 高实时运动控制"双核异构架构）：
-
-- 工业流水线零件分拣
-- 电子元器件检测
-- 医疗物资归类
-- 农产品分级
-- 物流货物理货
-- 智能安防、自主导航、人形机器人感知等其他 RDK X5 嵌入式 AI 应用
+Contains status information such as position, speed, sensor data, and alerts, received via USART interrupt + DMA double buffering, with parsing triggered by an idle-line interrupt.
 
 ---
 
-## 可扩展方向
+## Application Scenarios
 
-**功能层面**：
-- 升级为 YOLOv11 更大规格版本或 RT-DETR 等 Transformer 系框架，提升小目标识别能力
-- 引入语义分割模型，实现破袋后垃圾的像素级精细分类
-- 拓展毫米波雷达或深度摄像头，构建 RGB-D 感知体系，解决透明、反光等特殊材质识别难题
+**Current Scenarios**: Intelligent household waste sorting in homes, communities, supermarkets, office buildings, airports, train stations, and other public and semi-public spaces.
 
-**场景层面**：
-- 集成 5G / Wi-Fi 6 通信模块，实现多机协同与远程运维
-- 拓展至智慧城市与智能物流场景
+**Transferable Scenarios** (enabled by the "high-performance embedded vision + high-real-time motion control" heterogeneous dual-core architecture):
+
+- Industrial assembly-line parts sorting
+- Electronic component inspection
+- Medical supplies categorization
+- Agricultural product grading
+- Logistics cargo handling
+- Other RDK X5 embedded AI applications such as intelligent security, autonomous navigation, and humanoid robot perception
 
 ---
 
-## 项目结构建议
+## Extensibility
 
-> 以下为根据文档内容推荐的代码仓库目录结构，可根据实际工程调整。
+**Functional Level**:
+- Upgrade to a larger-scale version of YOLOv11 or Transformer-based frameworks such as RT-DETR to improve small-object recognition
+- Introduce semantic segmentation models to achieve pixel-level fine-grained classification of waste after bag-breaking
+- Add millimeter-wave radar or depth cameras to build an RGB-D perception system, addressing recognition challenges for transparent or reflective materials
+
+**Scenario Level**:
+- Integrate 5G / Wi-Fi 6 communication modules to enable multi-robot coordination and remote maintenance
+- Expand into smart city and intelligent logistics scenarios
+
+---
+
+## Suggested Project Structure
+
+> The following is a recommended code repository directory structure based on the document content; it can be adjusted according to actual engineering needs.
 
 ```
 .
-├── upper_computer/                # 上位机（RDK X5）
-│   ├── capture/                   # 图像采集与预处理模块
-│   ├── inference/                 # YOLOv11 BPU 推理模块（量化模型 .bin）
-│   ├── tracking/                  # ByteTrack 多目标追踪模块
-│   ├── coordinate_transform/      # 坐标变换与指令下发模块
-│   ├── serial_comm/               # 串口通信线程
+├── upper_computer/                # Host side (RDK X5)
+│   ├── capture/                   # Image acquisition & preprocessing module
+│   ├── inference/                 # YOLOv11 BPU inference module (quantized .bin model)
+│   ├── tracking/                  # ByteTrack multi-target tracking module
+│   ├── coordinate_transform/      # Coordinate transformation & command dispatch module
+│   ├── serial_comm/               # Serial communication thread
 │   └── main.py
-├── lower_computer/                # 下位机（STM32H750，Keil + HAL）
+├── lower_computer/                # MCU side (STM32H750, Keil + HAL)
 │   ├── Core/
 │   │   ├── Src/
-│   │   │   ├── usart_parse.c      # 串口接收与解析
-│   │   │   ├── corexy_kinematics.c# CoreXY 运动学解算
-│   │   │   ├── servo_control.c    # 舵机与执行机构控制
-│   │   │   ├── bag_breaking.c     # 破袋时序控制
-│   │   │   └── hmi_display.c      # 人机交互显示
+│   │   │   ├── usart_parse.c      # Serial receive & parsing
+│   │   │   ├── corexy_kinematics.c# CoreXY kinematics solving
+│   │   │   ├── servo_control.c    # Servo & actuator control
+│   │   │   ├── bag_breaking.c     # Bag-breaking timing control
+│   │   │   └── hmi_display.c      # HMI display
 │   │   └── Inc/
 │   └── MDK-ARM/
-├── mechanical/                    # SolidWorks 三维模型与图纸
-├── pcb/                            # 电路设计文件
-├── docs/                          # 技术文档、测试报告
+├── mechanical/                    # SolidWorks 3D models & drawings
+├── pcb/                            # Circuit design files
+├── docs/                          # Technical documentation, test reports
 └── README.md
 ```
 
 ---
 
-## 参考文献
+## References
 
 1. G. Yang et al., "Garbage Classification System with YOLOV5 Based on Image Recognition," ICSIP, 2021.
 2. B. D. Carolis, F. Ladogana, N. Macchiarulo, "YOLO TrashNet: Garbage Detection in Video Streams," EAIS, 2020.
@@ -264,10 +266,10 @@
 
 ---
 
-## 致谢
+## Acknowledgments
 
-本项目在视觉算法 BPU 异构部署与流水线调度机制的优化过程中，参考了地瓜派（D-Robotics）开发者社区的技术分享，特此致谢。
+During the optimization of the BPU heterogeneous deployment and pipeline scheduling mechanism for the vision algorithms, this project referenced technical resources shared by the D-Robotics (地瓜派) developer community. Sincere thanks are extended for this support.
 
 ---
 
-> 本项目深度融合异构计算、机器视觉与机电控制技术，为生活垃圾智能分类的工程化落地提供了高效完整的解决方案，同时在工业零件分拣、医疗物资归类、农产品分级等场景具备良好的可迁移性与推广价值。
+> This project deeply integrates heterogeneous computing, machine vision, and electromechanical control technologies, providing an efficient and complete engineering solution for the practical deployment of intelligent household waste sorting. It also demonstrates strong transferability and application value in scenarios such as industrial parts sorting, medical supplies categorization, and agricultural product grading.
